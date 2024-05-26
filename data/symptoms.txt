@@ -1,0 +1,50 @@
+Febre
+Dor de cabeça
+Náuseas
+Vómitos
+Fadiga
+Diarreia
+Tosse
+Falta de ar
+Dor no peito
+Tonturas
+Dor de garganta
+Dores musculares
+Dor nas articulações
+Dor abdominal
+Obstipação
+Batimento cardíaco rápido
+Inchaço
+Erupção cutânea
+Comichão
+Dificuldade em engolir
+Perda de peso
+Ganho de peso
+Perda de apetite
+Sede excessiva
+Micção frequente
+Sangue na urina
+Sangue nas fezes
+Alterações na visão
+Perda auditiva
+Epistaxis
+Suores noturnos
+Calafrios
+Pele pálida
+Icterícia
+Dificuldade em dormir
+Perda de memória
+Confusão
+Alterações de humor
+Ansiedade
+Depressão
+Alucinações
+Paralisia
+Dormência ou formigamento
+Tremores
+Convulsões
+Desmaio
+Hematomas ou sangramentos inexplicados
+Menstruação irregular
+Disfunção erétil
+Perda de libido
