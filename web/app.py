@@ -27,6 +27,7 @@ app = Flask(__name__)
 app.config.from_prefixed_env()
 log = app.logger
 
+
 ###### ROUTES #####
 @app.route("/", methods=("GET",))
 def list_all_clinics():
@@ -43,9 +44,10 @@ def schedule_appointment(clinica):
 
     pacient = data.get("pacient")
     doctor = data.get("doctor")
-    timestamp = data.get("timestamp")
+    date = data.get("date")
+    time = data.get("time")
 
-    if pacient is None or doctor is None or timestamp is None:
+    if pacient is None or doctor is None or date is None or time is None:
         return jsonify({"message": "Bad Request"}), 400
 
     log.debug(f"Scheduling appointment at clinic \'{clinica}\'. Payload: {data}")
@@ -59,9 +61,10 @@ def cancel_appointment(clinica):
 
     pacient = data["pacient"]
     doctor = data["doctor"]
-    timestamp = data["timestamp"]
+    date = data.get("date")
+    time = data.get("time")
 
-    if not pacient or not doctor or not timestamp:
+    if pacient is None or doctor is None or date is None or time is None:
         return jsonify({"message": "Bad Request"}), 400
 
     log.debug(f"Cancelling appointment at clinic \'{clinica}\'. Payload: {data}")
