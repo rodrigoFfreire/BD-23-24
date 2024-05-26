@@ -30,7 +30,7 @@ dictConfig(
 app = Flask(__name__)
 app.config.from_prefixed_env()
 log = app.logger
-DB_URL = os.environ.get("DATABASE_URL", "postgres://app:app@postgres/deez")
+DB_URL = os.environ.get("DATABASE_URL", "postgres://app:app@postgres/app")
 
 
 def is_valid_date(date_str):
@@ -52,9 +52,21 @@ def is_valid_time(time_str):
 # ROUTES
 @app.route("/", methods=("GET",))
 def list_all_clinics():
-    # TODO
-    log.debug("Listing all clinics...")
-    return jsonify({"message": "Clinics: ..."}), 501  # Change this to 200 (OK) when implemented
+    try:
+        with psycopg.connect(conninfo=DB_URL) as conn:
+            conn.read_only = True
+            with conn.cursor(row_factory=namedtuple_row) as cur:
+                data = cur.execute(
+                    """
+                    SELECT nome, morada
+                    FROM clinica
+                    """
+                ).fetchall()
+                log.debug(f"Listing all clinics. Found {cur.rowcount} rows.")
+        return jsonify(data)
+    except psycopg.Error as e:
+        log.debug(e)
+        return jsonify({"error": "Could not complete this request"}), 500
 
 
 @app.route("/c/<clinica>/registar", methods=("POST",))
