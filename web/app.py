@@ -59,7 +59,7 @@ def list_all_clinics():
                 data = cur.execute(
                     """
                     SELECT nome, morada
-                    FROM clinica
+                    FROM clinica;
                     """
                 ).fetchall()
                 log.debug(f"Listing all clinics. Found {cur.rowcount} rows.")
@@ -119,10 +119,26 @@ def cancel_appointment(clinica):
 
 @app.route("/c/<clinica>", methods=("GET",))
 def list_clinic_specialties(clinica):
-    # TODO
-    log.debug(f"Listing specialties of clinic \'{clinica}\'")
-    return jsonify({"message": f"Specialties of clinic \'{clinica}\': ..."}), 501  # Change this to 200 (OK) when implemented
-
+    try:
+        with psycopg.connect(conninfo=DB_URL) as conn:
+            conn.read_only = True
+            with conn.cursor(row_factory=namedtuple_row) as cur:
+                data = cur.execute(
+                    """
+                    SELECT DISTINCT d.especialidade
+                    FROM doctor d
+                    JOIN trabalha t ON d.nif = w.nif
+                    JOIN clinica c ON t.nome = c.nome
+                    WHERE c.nome = %(clinic_name)s;
+                    """,
+                    {"clinic_name": clinica},
+                ).fetchall()
+                log.debug(f"Listing specialties from clinic {clinica}. Found {cur.rowcount} rows.")
+        return jsonify(data)
+    except psycopg.Error as e:
+        log.debug(e)
+        return jsonify({"error": "Could not complete this request"}), 500
+    
 
 @app.route("/c/<clinica>/<especialidade>", methods=("GET",))
 def list_specialty_doctors(clinica, especialidade):
