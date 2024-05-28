@@ -1,13 +1,16 @@
 #!/usr/bin/python3
-from .utils.validators import *
-
 import os
+import sys
+sys.path.append('/app/web')
+
 from logging.config import dictConfig
 
 import psycopg
 from flask import Flask, jsonify, request
 from psycopg.rows import namedtuple_row
-from .queries.queries import *
+
+from utils.validators import *
+from queries.queries import *
 
 dictConfig(
     {

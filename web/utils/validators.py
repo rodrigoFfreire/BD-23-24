@@ -1,5 +1,5 @@
 from datetime import datetime
-from exceptions import InvalidInput, NonExistentValue
+from .exceptions import InvalidInput, NonExistentValue
 
 def is_valid_datetime(datetime_str: str, format_str: str):
     try:
