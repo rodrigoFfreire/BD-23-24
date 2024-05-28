@@ -9,7 +9,7 @@ FIND_CLINIC_QUERY = \
     """
     SELECT nome
     FROM clinica
-    WHERE nome == %(clinic_name)s;
+    WHERE nome = %(clinic_name)s;
     """
 
 # Lists all specialties given a clinic
@@ -29,7 +29,7 @@ LIST_SPECIALTY_DOCTORS_QUERY = \
     FROM medico m
     JOIN trabalha t ON m.nif = t.nif
     JOIN clinica c ON t.nome = c.nome
-    WHERE c.nome = %(clinic_name)s AND d.especialidade = %(specialty)s; 
+    WHERE c.nome = %(clinic_name)s AND m.especialidade = %(specialty)s; 
     """
 
 # Fetches the date and time of all appointments of a doctor 
