@@ -1,7 +1,7 @@
 #!/usr/bin/python3
+from .utils.validators import *
 
 import os
-import datetime
 from logging.config import dictConfig
 
 import psycopg
@@ -33,69 +33,37 @@ log = app.logger
 DB_URL = os.environ.get("DATABASE_URL", "postgres://app:app@postgres/app")
 
 
-def is_valid_date(date_str):
-    try:
-        datetime.datetime.strptime(date_str, "%Y-%m-%d")
-        return True
-    except ValueError:
-        return False
-
-
-def is_valid_time(time_str):
-    try:
-        datetime.datetime.strptime(time_str, "%H:%M")
-        return True
-    except ValueError:
-        return False
-
-
 # ROUTES
 @app.route("/c/<clinica>/registar", methods=("POST",))
 def schedule_appointment(clinica):
-    # TODO
     pacient = request.args.get("pacient")
     doctor = request.args.get("doctor")
     date = request.args.get("date")
     time = request.args.get("time")
 
-    if pacient is None or doctor is None or date is None or time is None:
-        return jsonify({"error": "Missing fields"}), 400
-    if not is_valid_date(date):
-        return jsonify({"error": "Incorrect date format"}), 400
-    if not is_valid_time(time):
-        return jsonify({"error": "Incorrect time format"}), 400
+    try:
+        parse_appointment_input(pacient, doctor, date, time)
+    except InvalidInput as e:
+        log.debug(e)
+        return jsonify({"error": e}), 400
 
-    log.debug(f"Scheduling appointment at clinic \'{clinica}\'. Received args: {pacient}, {doctor}, {date}, {time}")
-    return jsonify({
-        "pacient": pacient,
-        "doctor": doctor,
-        "date": date,
-        "time": time
-    }), 501  # Change this to 204 (No Content) when implemented and return ""
+    # TODO
 
 
 @app.route("/c/<clinica>/cancelar", methods=("POST",))
 def cancel_appointment(clinica):
-    # TODO
     pacient = request.args.get("pacient")
     doctor = request.args.get("doctor")
     date = request.args.get("date")
     time = request.args.get("time")
+    
+    try:
+        parse_appointment_input(pacient, doctor, date, time)
+    except InvalidInput as e:
+        log.debug(e)
+        return jsonify({"error": e}), 400
 
-    if pacient is None or doctor is None or date is None or time is None:
-        return jsonify({"error": "Missing fields"}), 400
-    if not is_valid_date(date):
-        return jsonify({"error": "Incorrect date format"}), 400
-    if not is_valid_time(time):
-        return jsonify({"error": "Incorrect time format"}), 400
-
-    log.debug(f"Canceling appointment at clinic \'{clinica}\'. Received args: {pacient}, {doctor}, {date}, {time}")
-    return jsonify({
-        "pacient": pacient,
-        "doctor": doctor,
-        "date": date,
-        "time": time
-    }), 501  # Change this to 204 (No Content) when implemented and return ""
+    # TODO
 
 
 @app.route("/", methods=("GET",))
