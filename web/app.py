@@ -7,6 +7,7 @@ from logging.config import dictConfig
 import psycopg
 from flask import Flask, jsonify, request
 from psycopg.rows import namedtuple_row
+from .queries.queries import *
 
 dictConfig(
     {
@@ -72,12 +73,7 @@ def list_all_clinics():
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                data = cur.execute(
-                    """
-                    SELECT nome, morada
-                    FROM clinica;
-                    """
-                ).fetchall()
+                data = cur.execute(LIST_CLINICS_QUERY).fetchall()
                 log.debug(f"Fetched {cur.rowcount} clinics.")
         return jsonify(data)
     except psycopg.Error as e:
@@ -91,18 +87,15 @@ def list_clinic_specialties(clinica):
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                data = cur.execute(
-                    """
-                    SELECT DISTINCT m.especialidade
-                    FROM medico m
-                    JOIN trabalha t ON m.nif = t.nif
-                    JOIN clinica c ON t.nome = c.nome
-                    WHERE c.nome = %(clinic_name)s;
-                    """,
-                    {"clinic_name": clinica},
-                ).fetchall()
+                clinic_name = cur.execute(FIND_CLINIC_QUERY, {"clinic_name": clinica})
+                check_clinic_name(clinic_name)
+            
+                data = cur.execute(LIST_SPECIALTIES_QUERY, {"clinic_name": clinica}).fetchall()
                 log.debug(f"Fetched {cur.rowcount} specialties from clinic {clinica}")
         return jsonify(data)
+    except NonExistentValue as e:
+        log.debug(e)
+        return jsonify({"error": e}), 400
     except psycopg.Error as e:
         log.debug(e)
         return jsonify({"error": "Could not complete this request"}), 500
@@ -115,38 +108,31 @@ def list_specialty_doctors(clinica, especialidade):
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
+                clinic_name = cur.execute(FIND_CLINIC_QUERY, {"clinic_name": clinica})
+                check_clinic_name(clinic_name)
+                
                 doctor_names = cur.execute(
-                    """
-                    SELECT m.nome
-                    FROM medico m
-                    JOIN trabalha t ON m.nif = t.nif
-                    JOIN clinica c ON t.nome = c.nome
-                    WHERE c.nome = %(clinic_name)s AND d.especialidade = %(specialty)s; 
-                    """,
+                    LIST_SPECIALTY_DOCTORS_QUERY, 
                     {"clinic_name": clinica, "specialty": especialidade},
                 ).fetchall()
                 log.debug(f"Fetched {cur.rowcount} doctors from clinic {clinica} specialized in {especialidade}.")
                 
                 for name in doctor_names:
                     schedules = cur.execute(
-                        """
-                        SELECT c.data, c.hora
-                        FROM consulta c
-                        JOIN medico m ON c.nif = m.nif
-                        WHERE m.nome = %(doctor_name)s
-                            AND c.data > CURRENT_DATE
-                            OR (c.data = CURRENT_DATE AND c.hora > CURRENT_TIME);
-                        """,
+                        LIST_DOCTOR_SCHEDULES_QUERY,
                         {"doctor_name": name[0]}
                     ).fetchmany(3)
-                    log.debug(f"Fetched {cur.rowcount} available schedules for doctor {name[0]}")
                     
+                    log.debug(f"Fetched {cur.rowcount} available schedules for doctor {name[0]}")
                     formatted_schedules = [
                         {'data': row.data.strfttime('%Y-%m-%d'), 'hora': row.hora.strftime('%H:%M')} 
                         for row in schedules
                     ]
                     data.append({"doctor": name[0], "schedules": formatted_schedules})
         return jsonify(data)
+    except NonExistentValue as e:
+        log.debug(e)
+        return jsonify({"error": e}), 400
     except psycopg.Error as e:
         log.debug(e)
         return jsonify({"error": "Could not complete this request"}), 500
