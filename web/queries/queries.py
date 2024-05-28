@@ -42,3 +42,17 @@ LIST_DOCTOR_SCHEDULES_QUERY = \
         AND c.data > CURRENT_DATE
         OR (c.data = CURRENT_DATE AND c.hora > CURRENT_TIME);
     """
+    
+# Deletes appointment given pacient, doctor, clinic and date & time
+DELETE_APPOINTMENT_QUERY = \
+    """
+    DELETE FROM consulta c
+    USING paciente p, medico m
+    JOIN p ON c.SSN = p.SSN
+    JOIN m ON c.NIF = m.NIF
+    WHERE c.nome = %(clinic_name)s
+        AND c.data = %(data)s
+        AND c.hora = %(hora)s
+        AND p.nome = %(pacient_name)s
+        AND m.nome = %(doctor_name)s;
+    """

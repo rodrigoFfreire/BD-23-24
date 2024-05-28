@@ -66,6 +66,25 @@ def cancel_appointment(clinica):
     except InvalidInput as e:
         log.debug(e)
         return jsonify({"error": e}), 400
+    
+    try:
+        with psycopg.connect(conninfo=DB_URL) as conn:
+            with conn.cursor(row_factory=namedtuple_row) as cur:
+                clinic_name = cur.execute(FIND_CLINIC_QUERY, {"clinic_name": clinica})
+                check_clinic_name(clinic_name)
+                
+                cur.execute(
+                    DELETE_APPOINTMENT_QUERY,
+                    {"clinic_name": clinica, 
+                     "data": date, 
+                     "hora": time, 
+                     "doctor_name": doctor, 
+                     "pacient_name": pacient
+                    }
+                )
+    except psycopg.Error as e:
+        log.debug(e)
+        return jsonify({"error": "Could not complete this request"}), 500
 
     # TODO
 
@@ -133,9 +152,6 @@ def list_specialty_doctors(clinica, especialidade):
                     ]
                     data.append({"doctor": name[0], "schedules": formatted_schedules})
         return jsonify(data)
-    except NonExistentValue as e:
-        log.debug(e)
-        return jsonify({"error": e}), 400
     except psycopg.Error as e:
         log.debug(e)
         return jsonify({"error": "Could not complete this request"}), 500
