@@ -1,5 +1,5 @@
 from datetime import datetime
-from exceptions import InvalidInput
+from exceptions import InvalidInput, NonExistentValue
 
 def is_valid_datetime(datetime_str: str, format_str: str):
     try:
@@ -15,3 +15,7 @@ def parse_appointment_input(pacient, doctor, date, time):
         raise InvalidInput("Invalid date format")
     if not is_valid_datetime(time, "%H:%M"):
         raise InvalidInput("Invalid time format")
+    
+def check_clinic_name(query_result):
+    if not query_result:
+        raise NonExistentValue("This clinic does not exist")
