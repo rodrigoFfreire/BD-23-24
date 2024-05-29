@@ -137,7 +137,7 @@ def list_clinic_specialties(clinica):
 @app.route("/c/<clinica>/<especialidade>", methods=("GET",))
 def list_specialty_doctors(clinica, especialidade):
     try:
-        results = []
+        results = {"available_appointments": []}
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
@@ -160,7 +160,7 @@ def list_specialty_doctors(clinica, especialidade):
                         {'data': row.data.strftime('%Y-%m-%d'), 'hora': row.hora.strftime('%H:%M')} 
                         for row in schedules
                     ]
-                    results.append({"doctor": d[0], "schedules": formatted_schedules})
+                    results["available_appointments"].append({"doctor": d[0], "schedules": formatted_schedules})
         return jsonify(results)
     except psycopg.errors.RaiseException as e:
         return jsonify({"error": str(e).split('\n')[0]}), 400
