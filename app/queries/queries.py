@@ -35,10 +35,10 @@ LIST_DOCTOR_SCHEDULES = \
         OR (c.data = CURRENT_DATE AND c.hora > CURRENT_TIME);
     """
 
-# Checks if the optional arguments (clinic, pacient, doctor) exist in the database
-CHECK_ARGS = \
+# Checks if the specified clinic exists in the database
+CHECK_CLINIC = \
     """
-    SELECT check_args(%(clinic_name)s, %(pacient_ssn)s, %(doctor_nif)s);
+    SELECT check_args(%(clinic_name)s);
     """
 
 # Checkf is we can schedule an appointment with the given arguments
