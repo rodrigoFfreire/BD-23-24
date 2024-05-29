@@ -139,24 +139,24 @@ def list_specialty_doctors(clinica, especialidade):
             with conn.cursor(row_factory=namedtuple_row) as cur:
                 cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Checks if clinic exists
                 
-                doctor_names = cur.execute(
+                doctors = cur.execute(
                     LIST_SPECIALTY_DOCTORS, 
                     {"clinic_name": clinica, "specialty": especialidade},
                 ).fetchall()
 
                 log.debug(f"Fetched {cur.rowcount} doctors from clinic {clinica} specialized in {especialidade}.")
-                for name in doctor_names:
+                for d in doctors:
                     schedules = cur.execute(
                         LIST_DOCTOR_SCHEDULES,
-                        {"doctor_name": name[0]}
+                        {"doctor_nif": d[1], "clinic_name": clinica}
                     ).fetchmany(3)
                     
-                    log.debug(f"Fetched {cur.rowcount} available schedules for doctor {name[0]}")
+                    log.debug(f"Fetched {cur.rowcount} available schedules for doctor {d[0]}")
                     formatted_schedules = [
-                        {'data': row.data.strfttime('%Y-%m-%d'), 'hora': row.hora.strftime('%H:%M')} 
+                        {'data': row.data.strftime('%Y-%m-%d'), 'hora': row.hora.strftime('%H:%M')} 
                         for row in schedules
                     ]
-                    results.append({"doctor": name[0], "schedules": formatted_schedules})
+                    results.append({"doctor": d[0], "schedules": formatted_schedules})
         return jsonify(results)
     except psycopg.errors.RaiseException as e:
         return jsonify({"error": str(e).split('\n')[0]}), 400
