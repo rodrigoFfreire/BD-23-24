@@ -51,42 +51,49 @@ def schedule_appointment(clinica):
         log.debug(e)
         return jsonify({"error": e}), 400
 
-    # TODO
+    try:
+        with psycopg.connect(conninfo=DB_URL) as conn:
+            with conn.cursor(row_factory=namedtuple_row) as cur:
+                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Checks if valid clinic
+
+                # TODO
+        return jsonify({"message": "Appointment was scheduled successfully!"})
+    except psycopg.errors.RaiseException as e:
+        return jsonify({"error": str(e).split('\n')[0]})
+    except psycopg.Error as e:
+        log.debug(e)
+        return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
 
 
 @app.route("/c/<clinica>/cancelar", methods=("POST",))
 def cancel_appointment(clinica):
-    pacient = request.args.get("pacient")
-    doctor = request.args.get("doctor")
+    pacient_ssn = request.args.get("pacient")
+    doctor_nif = request.args.get("doctor")
     date = request.args.get("date")
     time = request.args.get("time")
     
     try:
-        parse_appointment_input(pacient, doctor, date, time)
+        parse_appointment_input(pacient_ssn, doctor_nif, date, time)
     except InvalidInput as e:
         log.debug(e)
-        return jsonify({"error": e}), 400
+        return jsonify({"error": str(e)}), 400
     
     try:
         with psycopg.connect(conninfo=DB_URL) as conn:
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                clinic_name = cur.execute(FIND_CLINIC_QUERY, {"clinic_name": clinica})
-                check_clinic_name(clinic_name)
-                
+                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Checks if valid clinic
+
                 cur.execute(
-                    DELETE_APPOINTMENT_QUERY,
-                    {"clinic_name": clinica, 
-                     "data": date, 
-                     "hora": time, 
-                     "doctor_name": doctor, 
-                     "pacient_name": pacient
-                    }
-                )
+                    CHECK_AND_DELETE_APPOINTMENT, 
+                    {"clinic_name": clinica, "pacient_ssn": pacient_ssn, "doctor_nif": doctor_nif,
+                     "date": date, "time": time}
+                ) # Checks if the appointment exists and deletes it
+        return jsonify({"message": "Appointment was cancelled successfully!"})
+    except psycopg.errors.RaiseException as e:
+        return jsonify({"error": str(e).split('\n')[0]}), 400
     except psycopg.Error as e:
         log.debug(e)
-        return jsonify({"error": "Could not complete this request"}), 500
-
-    # TODO
+        return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
 
 
 @app.route("/", methods=("GET",))
@@ -95,32 +102,32 @@ def list_all_clinics():
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                data = cur.execute(LIST_CLINICS_QUERY).fetchall()
+                data = cur.execute(LIST_CLINICS).fetchall()
                 log.debug(f"Fetched {cur.rowcount} clinics.")
         return jsonify(data)
     except psycopg.Error as e:
         log.debug(e)
-        return jsonify({"error": "Could not complete this request"}), 500
+        return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
 
 
 @app.route("/c/<clinica>", methods=("GET",))
 def list_clinic_specialties(clinica):
     try:
+        print(len(clinica))
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                clinic_name = cur.execute(FIND_CLINIC_QUERY, {"clinic_name": clinica})
-                check_clinic_name(clinic_name)
+                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Check if valid clinic
             
-                data = cur.execute(LIST_SPECIALTIES_QUERY, {"clinic_name": clinica}).fetchall()
+                data = cur.execute(LIST_SPECIALTIES, {"clinic_name": clinica}).fetchall()
                 log.debug(f"Fetched {cur.rowcount} specialties from clinic {clinica}")
         return jsonify(data)
-    except NonExistentValue as e:
+    except psycopg.errors.RaiseException as e:
         log.debug(e)
-        return jsonify({"error": e}), 400
-    except psycopg.Error as e:
+        return jsonify({"error": str(e).split('\n')[0]}), 400
+    except Exception as e:
         log.debug(e)
-        return jsonify({"error": "Could not complete this request"}), 500
+        return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
     
 
 @app.route("/c/<clinica>/<especialidade>", methods=("GET",))
@@ -130,18 +137,17 @@ def list_specialty_doctors(clinica, especialidade):
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                clinic_name = cur.execute(FIND_CLINIC_QUERY, {"clinic_name": clinica})
-                check_clinic_name(clinic_name)
+                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Check clinic name
                 
                 doctor_names = cur.execute(
-                    LIST_SPECIALTY_DOCTORS_QUERY, 
+                    LIST_SPECIALTY_DOCTORS, 
                     {"clinic_name": clinica, "specialty": especialidade},
                 ).fetchall()
+
                 log.debug(f"Fetched {cur.rowcount} doctors from clinic {clinica} specialized in {especialidade}.")
-                
                 for name in doctor_names:
                     schedules = cur.execute(
-                        LIST_DOCTOR_SCHEDULES_QUERY,
+                        LIST_DOCTOR_SCHEDULES,
                         {"doctor_name": name[0]}
                     ).fetchmany(3)
                     
@@ -152,9 +158,11 @@ def list_specialty_doctors(clinica, especialidade):
                     ]
                     data.append({"doctor": name[0], "schedules": formatted_schedules})
         return jsonify(data)
-    except psycopg.Error as e:
+    except psycopg.errors.RaiseException as e:
+        return jsonify({"error": str(e).split('\n')[0]}), 400
+    except Exception as e:
         log.debug(e)
-        return jsonify({"error": "Could not complete this request"}), 500
+        return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
 
 
 # Just for debugging purposes. Remove this later
@@ -174,7 +182,7 @@ def ping():
         return jsonify(test_data)
     except psycopg.Error as err:
         log.debug(err)
-        return jsonify({"error": "Could not execute query"}), 500
+        return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
 
 
 if __name__ == "__main__":
