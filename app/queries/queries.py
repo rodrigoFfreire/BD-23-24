@@ -4,12 +4,6 @@ LIST_CLINICS = \
     FROM clinica;
     """
 
-# Function that checks if specified clinic exits. Raises exception if not  
-CHECK_CLINIC = \
-    """
-    SELECT check_clinic_name(%(clinic_name)s)
-    """
-
 # Lists all specialties given a clinic
 LIST_SPECIALTIES = \
     """
@@ -41,9 +35,22 @@ LIST_DOCTOR_SCHEDULES = \
         OR (c.data = CURRENT_DATE AND c.hora > CURRENT_TIME);
     """
 
+# Checks if the optional arguments (clinic, pacient, doctor) exist in the database
+CHECK_ARGS = \
+    """
+    SELECT check_args(%(clinic_name)s, %(pacient_ssn)s, %(doctor_nif)s);
+    """
+
+# Checkf is we can schedule an appointment with the given arguments
+# Otherwise raises Exception
+SCHEDULE_APPOINTMENT = \
+    """
+    SELECT schedule_appointment(%(clinic_name)s, %(pacient_ssn)s, %(doctor_nif)s, %(date)s, %(time)s, %(day_of_week)s)
+    """
+
 # Checks if an appointment with provided clinic, pacient, doctor and date & time exists and cancels (deletes)
 # Otherwise raises Exception
-CHECK_AND_DELETE_APPOINTMENT = \
+DELETE_APPOINTMENT = \
     """
-    SELECT check_appointment_exists(%(clinic_name)s, %(pacient_ssn)s, %(doctor_nif)s, %(date)s, %(time)s)
+    SELECT delete_appointment(%(clinic_name)s, %(pacient_ssn)s, %(doctor_nif)s, %(date)s, %(time)s)
     """

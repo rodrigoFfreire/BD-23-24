@@ -40,13 +40,13 @@ DB_URL = os.environ.get("DATABASE_URL", "postgres://app:app@postgres/app")
 # ROUTES
 @app.route("/c/<clinica>/registar", methods=("POST",))
 def schedule_appointment(clinica):
-    pacient = request.args.get("pacient")
-    doctor = request.args.get("doctor")
+    pacient_ssn = request.args.get("pacient")
+    doctor_nif = request.args.get("doctor")
     date = request.args.get("date")
     time = request.args.get("time")
 
     try:
-        parse_appointment_input(pacient, doctor, date, time)
+        day_of_week = parse_appointment_input(pacient_ssn, doctor_nif, date, time)
     except InvalidInput as e:
         log.debug(e)
         return jsonify({"error": e}), 400
@@ -54,9 +54,11 @@ def schedule_appointment(clinica):
     try:
         with psycopg.connect(conninfo=DB_URL) as conn:
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Checks if valid clinic
-
-                # TODO
+                cur.execute(
+                    SCHEDULE_APPOINTMENT,
+                    {"clinic_name": clinica, "pacient_ssn": pacient_ssn, "doctor_nif": doctor_nif,
+                     "date": date, "time": time, "day_of_week": day_of_week}
+                )
         return jsonify({"message": "Appointment was scheduled successfully!"})
     except psycopg.errors.RaiseException as e:
         return jsonify({"error": str(e).split('\n')[0]})
@@ -81,13 +83,11 @@ def cancel_appointment(clinica):
     try:
         with psycopg.connect(conninfo=DB_URL) as conn:
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Checks if valid clinic
-
                 cur.execute(
-                    CHECK_AND_DELETE_APPOINTMENT, 
+                    DELETE_APPOINTMENT,
                     {"clinic_name": clinica, "pacient_ssn": pacient_ssn, "doctor_nif": doctor_nif,
                      "date": date, "time": time}
-                ) # Checks if the appointment exists and deletes it
+                )
         return jsonify({"message": "Appointment was cancelled successfully!"})
     except psycopg.errors.RaiseException as e:
         return jsonify({"error": str(e).split('\n')[0]}), 400
@@ -102,9 +102,9 @@ def list_all_clinics():
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                data = cur.execute(LIST_CLINICS).fetchall()
+                results = cur.execute(LIST_CLINICS).fetchall()
                 log.debug(f"Fetched {cur.rowcount} clinics.")
-        return jsonify(data)
+        return jsonify(results)
     except psycopg.Error as e:
         log.debug(e)
         return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
@@ -117,11 +117,11 @@ def list_clinic_specialties(clinica):
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Check if valid clinic
+                cur.execute(CHECK_ARGS, {"clinic_name": clinica}) # Checks if clinic exists
             
-                data = cur.execute(LIST_SPECIALTIES, {"clinic_name": clinica}).fetchall()
+                results = cur.execute(LIST_SPECIALTIES, {"clinic_name": clinica}).fetchall()
                 log.debug(f"Fetched {cur.rowcount} specialties from clinic {clinica}")
-        return jsonify(data)
+        return jsonify(results)
     except psycopg.errors.RaiseException as e:
         log.debug(e)
         return jsonify({"error": str(e).split('\n')[0]}), 400
@@ -133,11 +133,11 @@ def list_clinic_specialties(clinica):
 @app.route("/c/<clinica>/<especialidade>", methods=("GET",))
 def list_specialty_doctors(clinica, especialidade):
     try:
-        data = []
+        results = []
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Check clinic name
+                cur.execute(CHECK_ARGS, {"clinic_name": clinica}) # Check clinic name
                 
                 doctor_names = cur.execute(
                     LIST_SPECIALTY_DOCTORS, 
@@ -156,8 +156,8 @@ def list_specialty_doctors(clinica, especialidade):
                         {'data': row.data.strfttime('%Y-%m-%d'), 'hora': row.hora.strftime('%H:%M')} 
                         for row in schedules
                     ]
-                    data.append({"doctor": name[0], "schedules": formatted_schedules})
-        return jsonify(data)
+                    results.append({"doctor": name[0], "schedules": formatted_schedules})
+        return jsonify(results)
     except psycopg.errors.RaiseException as e:
         return jsonify({"error": str(e).split('\n')[0]}), 400
     except Exception as e:
