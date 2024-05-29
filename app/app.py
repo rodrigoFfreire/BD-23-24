@@ -104,7 +104,9 @@ def list_all_clinics():
             with conn.cursor(row_factory=namedtuple_row) as cur:
                 results = cur.execute(LIST_CLINICS).fetchall()
                 log.debug(f"Fetched {cur.rowcount} clinics.")
-        return jsonify(results)
+        
+        formatted_data = {"clinics": [{"clinic_name": clinic[0], "address": clinic[1]} for clinic in results]}
+        return jsonify(formatted_data)
     except psycopg.Error as e:
         log.debug(e)
         return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
@@ -121,7 +123,9 @@ def list_clinic_specialties(clinica):
             
                 results = cur.execute(LIST_SPECIALTIES, {"clinic_name": clinica}).fetchall()
                 log.debug(f"Fetched {cur.rowcount} specialties from clinic {clinica}")
-        return jsonify(results)
+                
+        formatted_data = {"specialties": [specialty[0] for specialty in results]}
+        return jsonify(formatted_data)
     except psycopg.errors.RaiseException as e:
         log.debug(e)
         return jsonify({"error": str(e).split('\n')[0]}), 400
