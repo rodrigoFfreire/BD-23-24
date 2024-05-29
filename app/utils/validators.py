@@ -23,7 +23,7 @@ def is_time_later(date_str, time_str):
     time = datetime.strptime(time_str, TIME_FORMAT).time()
     
     if date > now.date() or (date == now.date and time > now.time()):
-        return True
+        return date.isoweekday()
     return False
     
 def parse_appointment_input(pacient_ssn, doctor_nif, date, time):
@@ -45,5 +45,8 @@ def parse_appointment_input(pacient_ssn, doctor_nif, date, time):
         raise InvalidInput("Invalid date format")
     if not is_valid_datetime(time, TIME_FORMAT):
         raise InvalidInput("Invalid time format")
-    if not is_time_later(date, time):
+    
+    day_of_week = is_time_later(date, time)
+    if day_of_week is False:
         raise InvalidInput("date and time supplied are in the past")
+    return day_of_week
