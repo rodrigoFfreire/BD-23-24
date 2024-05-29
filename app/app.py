@@ -104,7 +104,9 @@ def list_all_clinics():
             with conn.cursor(row_factory=namedtuple_row) as cur:
                 results = cur.execute(LIST_CLINICS).fetchall()
                 log.debug(f"Fetched {cur.rowcount} clinics.")
-        return jsonify(results)
+        
+        formatted_data = {"clinics": [{"clinic_name": clinic[0], "address": clinic[1]} for clinic in results]}
+        return jsonify(formatted_data)
     except psycopg.Error as e:
         log.debug(e)
         return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
@@ -121,7 +123,9 @@ def list_clinic_specialties(clinica):
             
                 results = cur.execute(LIST_SPECIALTIES, {"clinic_name": clinica}).fetchall()
                 log.debug(f"Fetched {cur.rowcount} specialties from clinic {clinica}")
-        return jsonify(results)
+                
+        formatted_data = {"specialties": [specialty[0] for specialty in results]}
+        return jsonify(formatted_data)
     except psycopg.errors.RaiseException as e:
         log.debug(e)
         return jsonify({"error": str(e).split('\n')[0]}), 400
@@ -133,30 +137,30 @@ def list_clinic_specialties(clinica):
 @app.route("/c/<clinica>/<especialidade>", methods=("GET",))
 def list_specialty_doctors(clinica, especialidade):
     try:
-        results = []
+        results = {"available_appointments": []}
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
                 cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Checks if clinic exists
                 
-                doctor_names = cur.execute(
+                doctors = cur.execute(
                     LIST_SPECIALTY_DOCTORS, 
                     {"clinic_name": clinica, "specialty": especialidade},
                 ).fetchall()
 
                 log.debug(f"Fetched {cur.rowcount} doctors from clinic {clinica} specialized in {especialidade}.")
-                for name in doctor_names:
+                for d in doctors:
                     schedules = cur.execute(
                         LIST_DOCTOR_SCHEDULES,
-                        {"doctor_name": name[0]}
+                        {"doctor_nif": d[1], "clinic_name": clinica}
                     ).fetchmany(3)
                     
-                    log.debug(f"Fetched {cur.rowcount} available schedules for doctor {name[0]}")
+                    log.debug(f"Fetched {cur.rowcount} available schedules for doctor {d[0]}")
                     formatted_schedules = [
-                        {'data': row.data.strfttime('%Y-%m-%d'), 'hora': row.hora.strftime('%H:%M')} 
+                        {'data': row.data.strftime('%Y-%m-%d'), 'hora': row.hora.strftime('%H:%M')} 
                         for row in schedules
                     ]
-                    results.append({"doctor": name[0], "schedules": formatted_schedules})
+                    results["available_appointments"].append({"doctor": d[0], "schedules": formatted_schedules})
         return jsonify(results)
     except psycopg.errors.RaiseException as e:
         return jsonify({"error": str(e).split('\n')[0]}), 400

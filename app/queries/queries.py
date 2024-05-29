@@ -14,25 +14,23 @@ LIST_SPECIALTIES = \
     WHERE c.nome = %(clinic_name)s;
     """
 
-# Lists all doctor with a given specialty and clinic  
+# Lists all doctors (nif) with a given specialty and clinic 
 LIST_SPECIALTY_DOCTORS = \
     """
-    SELECT m.nome
+    SELECT DISTINCT m.nome, m.nif
     FROM medico m
     JOIN trabalha t ON m.nif = t.nif
-    JOIN clinica c ON t.nome = c.nome
-    WHERE c.nome = %(clinic_name)s AND m.especialidade = %(specialty)s; 
+    WHERE t.nome = %(clinic_name)s AND m.especialidade = %(specialty)s; 
     """
 
-# Fetches the date and time of all appointments of a doctor 
+# Fetches the date and time of all appointments of a doctor in a clinic 
 LIST_DOCTOR_SCHEDULES = \
     """
     SELECT c.data, c.hora
     FROM consulta c
-    JOIN medico m ON c.nif = m.nif
-    WHERE m.nome = %(doctor_name)s
-        AND c.data > CURRENT_DATE
-        OR (c.data = CURRENT_DATE AND c.hora > CURRENT_TIME);
+    WHERE nif = %(doctor_nif)s AND nome = %(clinic_name)s
+        AND (c.data > CURRENT_DATE OR c.data = CURRENT_DATE AND c.hora > CURRENT_TIME)
+    ORDER BY c.data ASC, c.hora ASC;
     """
 
 # Checks if the specified clinic exists in the database
