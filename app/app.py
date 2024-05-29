@@ -49,7 +49,7 @@ def schedule_appointment(clinica):
         day_of_week = parse_appointment_input(pacient_ssn, doctor_nif, date, time)
     except InvalidInput as e:
         log.debug(e)
-        return jsonify({"error": e}), 400
+        return jsonify({"error": str(e)}), 400
 
     try:
         with psycopg.connect(conninfo=DB_URL) as conn:
@@ -117,7 +117,7 @@ def list_clinic_specialties(clinica):
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                cur.execute(CHECK_ARGS, {"clinic_name": clinica}) # Checks if clinic exists
+                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Checks if clinic exists
             
                 results = cur.execute(LIST_SPECIALTIES, {"clinic_name": clinica}).fetchall()
                 log.debug(f"Fetched {cur.rowcount} specialties from clinic {clinica}")
@@ -137,7 +137,7 @@ def list_specialty_doctors(clinica, especialidade):
         with psycopg.connect(conninfo=DB_URL) as conn:
             conn.read_only = True
             with conn.cursor(row_factory=namedtuple_row) as cur:
-                cur.execute(CHECK_ARGS, {"clinic_name": clinica}) # Check clinic name
+                cur.execute(CHECK_CLINIC, {"clinic_name": clinica}) # Checks if clinic exists
                 
                 doctor_names = cur.execute(
                     LIST_SPECIALTY_DOCTORS, 
