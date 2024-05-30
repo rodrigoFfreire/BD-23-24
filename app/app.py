@@ -46,7 +46,7 @@ def schedule_appointment(clinica):
     time = request.args.get("time")
 
     try:
-        day_of_week = parse_appointment_input(pacient_ssn, doctor_nif, date, time)
+        parse_appointment_input(pacient_ssn, doctor_nif, date, time)
     except InvalidInput as e:
         log.debug(e)
         return jsonify({"error": str(e)}), 400
@@ -57,7 +57,7 @@ def schedule_appointment(clinica):
                 cur.execute(
                     SCHEDULE_APPOINTMENT,
                     {"clinic_name": clinica, "pacient_ssn": pacient_ssn, "doctor_nif": doctor_nif,
-                     "date": date, "time": time, "day_of_week": day_of_week}
+                     "date": date, "time": time}
                 )
         return jsonify({"message": "Appointment was scheduled successfully!"})
     except psycopg.errors.RaiseException as e:
@@ -169,26 +169,6 @@ def list_specialty_doctors(clinica, especialidade):
         return jsonify({"error": str(e).split('\n')[0]}), 400
     except Exception as e:
         log.debug(e)
-        return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
-
-
-# Just for debugging purposes. Remove this later
-@app.route("/ping", methods=("GET",))
-def ping():
-    try:
-        with psycopg.connect(conninfo=DB_URL) as conn:
-            with conn.cursor(row_factory=namedtuple_row) as cur:
-                test_data = cur.execute(
-                    """
-                    SELECT nome
-                    FROM test_table
-                    """
-                ).fetchall()
-                log.debug(f"Found {cur.rowcount} rows.")
-        print(test_data)
-        return jsonify(test_data)
-    except psycopg.Error as err:
-        log.debug(err)
         return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
 
 

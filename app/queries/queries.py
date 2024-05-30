@@ -26,11 +26,21 @@ LIST_SPECIALTY_DOCTORS = \
 # Fetches the date and time of all appointments of a doctor in a clinic 
 LIST_DOCTOR_SCHEDULES = \
     """
-    SELECT c.data, c.hora
-    FROM consulta c
-    WHERE nif = %(doctor_nif)s AND nome = %(clinic_name)s
-        AND (c.data > CURRENT_DATE OR c.data = CURRENT_DATE AND c.hora > CURRENT_TIME)
-    ORDER BY c.data ASC, c.hora ASC;
+    SELECT t1.data, t1.hora
+    FROM (
+        SELECT data, hora
+        FROM possible_schedules
+        WHERE check_if_doctor_works(data, %(clinic_name)s, %(doctor_nif)s) = TRUE
+    ) t1
+    LEFT JOIN (
+        SELECT data, hora
+        FROM consulta
+        WHERE nome = %(clinic_name)s
+            AND nif = %(doctor_nif)s
+            AND (data > CURRENT_DATE OR (data = CURRENT_DATE AND hora > CURRENT_TIME)) 
+    ) t2 ON t1.data = t2.data AND t1.hora = t2.hora
+    WHERE t2.data IS NULL
+    ORDER BY t1.data, t1.hora;
     """
 
 # Checks if the specified clinic exists in the database
@@ -43,7 +53,7 @@ CHECK_CLINIC = \
 # Otherwise raises Exception
 SCHEDULE_APPOINTMENT = \
     """
-    SELECT schedule_appointment(%(clinic_name)s, %(pacient_ssn)s, %(doctor_nif)s, %(date)s, %(time)s, %(day_of_week)s)
+    SELECT schedule_appointment(%(clinic_name)s, %(pacient_ssn)s, %(doctor_nif)s, %(date)s, %(time)s)
     """
 
 # Checks if an appointment with provided clinic, pacient, doctor and date & time exists and cancels (deletes)

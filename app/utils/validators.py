@@ -36,17 +36,14 @@ def parse_appointment_input(pacient_ssn, doctor_nif, date, time):
     if time is None:
         raise InvalidInput("Missing appointment time field")
     
-    if re.match(NIF_PATTERN, doctor_nif) is None:
-        raise InvalidInput("Invalid doctor NIF")
     if re.match(SSN_PATTERN, pacient_ssn) is None:
         raise InvalidInput("Invalid pacient SSN")
+    if re.match(NIF_PATTERN, doctor_nif) is None:
+        raise InvalidInput("Invalid doctor NIF")
     
     if not is_valid_datetime(date, DATE_FORMAT):
         raise InvalidInput("Invalid date format")
     if not is_valid_datetime(time, TIME_FORMAT):
         raise InvalidInput("Invalid time format")
-    
-    day_of_week = is_time_later(date, time)
-    if day_of_week is False:
+    if not is_time_later(date, time):
         raise InvalidInput("date and time supplied are in the past")
-    return day_of_week
