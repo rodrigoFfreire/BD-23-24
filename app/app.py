@@ -148,6 +148,9 @@ def list_specialty_doctors(clinica, especialidade):
                     {"clinic_name": clinica, "specialty": especialidade},
                 ).fetchall()
 
+                if not doctors:
+                    return jsonify({"error": "The specified specialty doesnt exist."}), 400;
+
                 log.debug(f"Fetched {cur.rowcount} doctors from clinic {clinica} specialized in {especialidade}.")
                 for d in doctors:
                     schedules = cur.execute(
