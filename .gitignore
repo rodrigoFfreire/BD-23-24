@@ -1,4 +1,6 @@
-.venv
-.vscode
-*.sql
-*.txt
+node_modules/
+**/.ipynb_checkpoints/
+**/*.db
+**/*.db-journal
+**/*.db-shm
+**/*.db-wal
