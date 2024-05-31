@@ -34,7 +34,7 @@ dictConfig(
 app = Flask(__name__)
 app.config.from_prefixed_env()
 log = app.logger
-DB_URL = os.environ.get("DATABASE_URL", "postgres://app:app@postgres/app")
+DB_URL = os.environ.get("DATABASE_URL", "postgres://saude:saude@postgres/saude")
 
 
 # ROUTES
@@ -61,7 +61,9 @@ def schedule_appointment(clinica):
                 )
         return jsonify({"message": "Appointment was scheduled successfully!"})
     except psycopg.IntegrityError as e:
-        return jsonify({"error": "Appointments can only be scheduled from 8h-13h and 14h-19h"}), 400
+        return jsonify(
+            {"error": "Appointments can only be scheduled from 8h-13h and 14h-19h \
+either on the hour or half hour."}), 400
     except psycopg.errors.RaiseException as e:
         return jsonify({"error": str(e).split('\n')[0]}), 400
     except psycopg.Error as e:
