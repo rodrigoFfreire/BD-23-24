@@ -39,13 +39,13 @@ Install Git on
 3. Run the following command to create your local clone
 
    ```bash
-   git clone https://github.com/bdist/bdist-workspace.git
+   git clone https://github.com/rodrigoFfreire/BD-23-24.git
    ```
 
 4. Change the current working directory to the location of the cloned directory.
 
    ```bash
-   cd bdist-workspace/
+   cd BD-23-24/
    ```
 
 5. From the cloned directory, start up `bdist-workspace` by running
@@ -56,19 +56,21 @@ Install Git on
 
    _Note:_ The services are attached to this Terminal, so the logs for all the services provided will be printed on its window.
    To shutdown safely you will need to issue CTRL+C in the Terminal window and wait until all the services stop gracefuly.
+> [!TIP]
+> You can use the `--detach` flag to run the containers in the background. `docker compose up --detach`
 
 ### Using the Jupyter Notebook [(Docs)](https://docs.jupyter.org/en/latest/)
 
 The Jupyter Notebook service runs on the port `9999`. Token authentication is enabled.
 
-1. You need to find your Authentication Token to login every time the `bdist-workspace` is launched (e.g., after a reboot)
+1. You need to find your Authentication Token to login every time the `bd-23-24` is launched (e.g., after a reboot)
 
 2. Find the section of the logs towards the bottom of the Terminal window that look like this excerpt:
 
    ```log
-   bdist-workspace-notebook-1  |     Or copy and paste one of these URLs:
-   bdist-workspace-notebook-1  |         http://7fd8c38e99bd:9999/lab?token=f83ee982668ebe66bee2dbeb5875d14131a1d118d1e0fa12
-   bdist-workspace-notebook-1  |         http://127.0.0.1:9999/lab?token=f83ee982668ebe66bee2dbeb5875d14131a1d118d1e0fa12
+   bd-23-24-workspace-notebook-1  |     Or copy and paste one of these URLs:
+   bd-23-24-workspace-notebook-1  |         http://7fd8c38e99bd:9999/lab?token=f83ee982668ebe66bee2dbeb5875d14131a1d118d1e0fa12
+   bd-23-24-workspace-notebook-1  |         http://127.0.0.1:9999/lab?token=f83ee982668ebe66bee2dbeb5875d14131a1d118d1e0fa12
    ```
 
    _Note:_ You can also view the logs for the `bdist-workspace-notebook-1` in the Containers tab in the Docker Desktop application.
@@ -104,7 +106,7 @@ pgAdmin is the most popular and feature rich Open Source administration and deve
 1. The `docker-compose..app.yml` file contains the instructions to launch the app. Relaunch the workspace with the following command to use it:
 
    ```bash
-   docker compose -f docker-compose..app.yml up
+   docker compose -f docker-compose..app.yml up --detach
    ```
 
    _Note:_ Please run the instructions in the `How do I update my workspace?` section if this file is does not exist.
@@ -119,7 +121,7 @@ pgAdmin is the most popular and feature rich Open Source administration and deve
    }
    ```
 
-4. Try modifying the message in `../app/app.py` while it is running.
+4. Try modifying the message in the [app](./app/app.py) while it is running.
 
 5. In the logs, check if an automatic reload of the Flask Web App is triggered when you save your changes.
 
@@ -137,7 +139,7 @@ You need to delete the data volume used by postgres and recreate it.
    docker compose down -v
    ```
 
-3. Run the steps in the following section to update `bdist-workspace`.
+3. Run the steps in the following section to update `bd-23-24`.
 
 ### How do I update my workspace?
 
@@ -147,7 +149,7 @@ You need to delete the data volume used by postgres and recreate it.
    git pull
    ```
 
-   This updates `bdist-workspace` to the latest version.
+   This updates `bd-23-24` to the latest version.
 
 2. Secondly, from the project directory run
 
@@ -163,7 +165,7 @@ You need to delete the data volume used by postgres and recreate it.
    docker compose up --build --force-recreate --remove-orphans
    ```
 
-   This starts up the `bdist-workspace` and cleans up unused images.
+   This starts up the `bd-23-24` and cleans up unused images.
 
 ### I get Permission Errors and/or the notebook Save Button is disabled
 
@@ -243,5 +245,11 @@ If the exception thrown looks like the one in the example, then follow this chec
 Please use GitHub Issues to report any issues you might have with `bdist-workspace`.
 
 ## Credits
-
+Rodrigo Freire
+<br>
+Pedro Silveira
+<br>
+Leonor Francisco
+<br>
+<br>
 Flavio Martins
