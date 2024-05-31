@@ -1,3 +1,4 @@
+**/.vscode
 data/*.sql
 node_modules/
 **/.ipynb_checkpoints/
