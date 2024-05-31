@@ -1,4 +1,4 @@
-# bdist-workspace
+# BD-23-24 (bdist-workspace)
 
 This repository provides containerized applications and microservices for the Information Systems and Databases Course @ Instituto Superior Técnico.
 
