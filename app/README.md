@@ -131,5 +131,8 @@
 8. Open the `appname` index page at <https://appname.herokuapps.com/>
 
 ## Credits
+Rodrigo Freire
+Pedro Silveira
+Leonor Francisco
 
 Flavio Martins
