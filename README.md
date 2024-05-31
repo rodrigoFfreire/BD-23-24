@@ -101,14 +101,7 @@ pgAdmin is the most popular and feature rich Open Source administration and deve
 
 ### Flask Web App
 
-1. Make sure the `app/` directory is right next to the `bdist-workspace/` directory. If needed, move the `app/` directory out of `bdist-workspace/`.
-
-   ```bash
-   $ ls
-   app/  bdist-workspace/
-   ```
-
-2. The `docker-compose..app.yml` file contains the instructions to launch the app. Relaunch the workspace with the following command to use it:
+1. The `docker-compose..app.yml` file contains the instructions to launch the app. Relaunch the workspace with the following command to use it:
 
    ```bash
    docker compose -f docker-compose..app.yml up
@@ -116,9 +109,9 @@ pgAdmin is the most popular and feature rich Open Source administration and deve
 
    _Note:_ Please run the instructions in the `How do I update my workspace?` section if this file is does not exist.
 
-3. Check if the app is running and open [ping](http://127.0.0.1:8080/ping).
+2. Check if the app is running and open [ping](http://127.0.0.1:8080/ping).
 
-4. Do you get an API-like HTTP JSON-formatted response like this?
+3. Do you get an API-like HTTP JSON-formatted response like this?
 
    ```json
    {
@@ -126,9 +119,9 @@ pgAdmin is the most popular and feature rich Open Source administration and deve
    }
    ```
 
-5. Try modifying the message in `../app/app.py` while it is running.
+4. Try modifying the message in `../app/app.py` while it is running.
 
-6. In the logs, check if an automatic reload of the Flask Web App is triggered when you save your changes.
+5. In the logs, check if an automatic reload of the Flask Web App is triggered when you save your changes.
 
 ## FAQ and Troubleshooting
 
