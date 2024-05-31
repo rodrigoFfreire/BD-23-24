@@ -60,8 +60,10 @@ def schedule_appointment(clinica):
                      "date": date, "time": time}
                 )
         return jsonify({"message": "Appointment was scheduled successfully!"})
+    except psycopg.IntegrityError as e:
+        return jsonify({"error": "Appointments can only be scheduled from 8h-13h and 14h-19h"}), 400
     except psycopg.errors.RaiseException as e:
-        return jsonify({"error": str(e).split('\n')[0]})
+        return jsonify({"error": str(e).split('\n')[0]}), 400
     except psycopg.Error as e:
         log.debug(e)
         return jsonify({"error": "An unexpected error occured. Could not complete the request."}), 500
