@@ -132,7 +132,9 @@
 
 ## Credits
 Rodrigo Freire
+<br>
 Pedro Silveira
+<br>
 Leonor Francisco
 
 Flavio Martins
