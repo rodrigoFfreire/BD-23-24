@@ -2,6 +2,9 @@
 
 This project is licensed under the terms of the Modified BSD License
 (also known as New or Revised or 3-Clause BSD), as follows:
+- Copyright (c) 2024, Rodrigo Freire
+- Copyright (c) 2024, Pedro Silveira
+- Copyright (c) 2024, Leonor Francisco
 
 - Copyright (c) 2023, Flavio Martins <flavio.f.martins@tecnico.ulisboa.pt>
 - Copyright (c) 2023-, BDist Development Team
